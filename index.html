@@ -1,0 +1,2150 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmoescrita</title>
+  <style>
+    :root {
+      --bg: #05030a;
+      --panel: rgba(11, 10, 22, 0.62);
+      --line: rgba(121, 242, 255, 0.18);
+      --text: #f4f7ff;
+      --muted: #9ea7ca;
+      --cyan: #79f2ff;
+      --violet: #9b63ff;
+      --green: #75f3a7;
+      --red: #ff698e;
+      --gold: #ffd369;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top, rgba(121, 78, 255, 0.2), transparent 32%),
+        radial-gradient(circle at 15% 20%, rgba(81, 218, 255, 0.12), transparent 22%),
+        linear-gradient(180deg, #05030a, #090515 60%, #030208);
+      color: var(--text);
+      font-family: Bahnschrift, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    button, input, textarea {
+      font: inherit;
+    }
+
+    .layout-shell {
+      width: min(100vw, 1700px);
+      max-width: 1700px;
+      height: min(100vh, 960px);
+      display: grid;
+      grid-template-columns: clamp(132px, 15vw, 204px) minmax(0, 1fr) clamp(132px, 15vw, 204px);
+      gap: clamp(8px, 1.2vw, 18px);
+      padding: 0 clamp(4px, 1vw, 16px);
+      align-items: stretch;
+    }
+
+    .app-shell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 1px solid rgba(140, 109, 255, 0.2);
+      box-shadow: var(--shadow);
+      background:
+        linear-gradient(180deg, rgba(8, 10, 20, 0.44), rgba(4, 5, 12, 0.66)),
+        url("./fundo.png");
+      background-position: center, center;
+      background-repeat: no-repeat, no-repeat;
+      background-size: cover, cover;
+      transform: translate3d(var(--shake-x, 0px), var(--shake-y, 0px), 0);
+    }
+
+    .app-shell::before,
+    .app-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .app-shell::before {
+      background:
+        radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.04), transparent 26%),
+        radial-gradient(circle at 74% 30%, rgba(155, 99, 255, 0.06), transparent 32%),
+        radial-gradient(circle at 54% 78%, rgba(84, 212, 255, 0.05), transparent 28%);
+      opacity: 0.7;
+      animation: floatNebula 28s ease-in-out infinite alternate;
+    }
+
+    .app-shell::after {
+      box-shadow: inset 0 0 140px rgba(5, 4, 12, 0.95);
+    }
+
+    #space,
+    #spaceGlow,
+    #spaceDust,
+    #starfield,
+    #battlefield,
+    #fxLayer,
+    #dangerVignette {
+      position: absolute;
+      inset: 0;
+    }
+
+    #spaceGlow,
+    #spaceDust,
+    #starfield {
+      overflow: hidden;
+    }
+
+    #spaceGlow {
+      opacity: 0.46;
+      mix-blend-mode: screen;
+    }
+
+    #spaceGlow::before,
+    #spaceGlow::after {
+      content: "";
+      position: absolute;
+      inset: -12%;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 24%, rgba(84, 212, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 72% 18%, rgba(155, 99, 255, 0.16), transparent 32%),
+        radial-gradient(circle at 50% 74%, rgba(255, 211, 105, 0.08), transparent 30%);
+      animation: glowShift 24s ease-in-out infinite alternate;
+    }
+
+    #spaceGlow::after {
+      inset: -20%;
+      opacity: 0.52;
+      filter: blur(42px);
+      background:
+        radial-gradient(circle at 18% 70%, rgba(84, 212, 255, 0.1), transparent 32%),
+        radial-gradient(circle at 78% 44%, rgba(155, 99, 255, 0.11), transparent 30%);
+      animation-duration: 34s;
+    }
+
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 0 10px rgba(123, 214, 255, 0.7);
+      animation:
+        twinkle var(--twinkle, 3s) ease-in-out infinite,
+        starDrift var(--drift-duration, 18s) linear infinite alternate;
+      transform: translate3d(0, 0, 0) scale(var(--base-scale, 1));
+      opacity: var(--star-opacity, 0.8);
+    }
+
+    .star.depth-1 {
+      box-shadow: 0 0 8px rgba(123, 214, 255, 0.42);
+      filter: blur(0.2px);
+    }
+
+    .star.depth-2 {
+      box-shadow: 0 0 12px rgba(123, 214, 255, 0.68);
+    }
+
+    .star.depth-3 {
+      box-shadow: 0 0 18px rgba(171, 219, 255, 0.85);
+    }
+
+    .space-mote {
+      position: absolute;
+      width: var(--mote-width, 18px);
+      height: var(--mote-height, 2px);
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(157, 225, 255, 0.42), rgba(255, 255, 255, 0));
+      opacity: var(--mote-opacity, 0.2);
+      filter: blur(0.3px);
+      animation:
+        moteFloat var(--mote-duration, 16s) linear infinite,
+        twinkle var(--mote-twinkle, 4s) ease-in-out infinite;
+    }
+
+    .nebula,
+    .nebula::before,
+    .nebula::after {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(34px);
+    }
+
+    .nebula {
+      width: 40vmax;
+      height: 40vmax;
+      left: -14vmax;
+      top: 8vmax;
+      background: radial-gradient(circle, rgba(78, 160, 255, 0.18), transparent 66%);
+      animation: floatNebula 18s ease-in-out infinite alternate;
+    }
+
+    .nebula::before {
+      content: "";
+      width: 26vmax;
+      height: 26vmax;
+      left: 45%;
+      top: 15%;
+      background: radial-gradient(circle, rgba(158, 90, 255, 0.18), transparent 66%);
+    }
+
+    .nebula::after {
+      content: "";
+      width: 18vmax;
+      height: 18vmax;
+      right: -4vmax;
+      bottom: -6vmax;
+      background: radial-gradient(circle, rgba(101, 255, 203, 0.12), transparent 68%);
+    }
+
+    .nebula.nebula-b {
+      width: 30vmax;
+      height: 30vmax;
+      left: auto;
+      right: -10vmax;
+      top: 12vmax;
+      opacity: 0.8;
+      background: radial-gradient(circle, rgba(156, 98, 255, 0.16), transparent 68%);
+      animation-duration: 23s;
+    }
+
+    .nebula.nebula-c {
+      width: 24vmax;
+      height: 24vmax;
+      left: 36%;
+      top: auto;
+      bottom: -8vmax;
+      opacity: 0.68;
+      background: radial-gradient(circle, rgba(78, 168, 255, 0.14), transparent 66%);
+      animation-duration: 27s;
+    }
+
+    #dangerVignette {
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(circle at center, transparent 44%, rgba(255, 80, 112, 0.24) 100%);
+      transition: opacity 100ms linear;
+      mix-blend-mode: screen;
+    }
+
+    #hud {
+      display: contents;
+    }
+
+    .hud-rail {
+      min-width: 0;
+      width: 100%;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+      position: relative;
+      padding: 18px 10px 18px;
+      align-self: stretch;
+      justify-self: stretch;
+    }
+
+    .hud-rail.left {
+      justify-self: start;
+      justify-items: stretch;
+      text-align: left;
+      align-content: start;
+    }
+
+    .hud-rail.right {
+      justify-self: end;
+      justify-items: stretch;
+      text-align: left;
+      align-content: start;
+    }
+
+    .hud-section {
+      display: grid;
+      gap: 10px;
+    }
+
+    .hud-stat {
+      min-width: 0;
+      padding: 3px 2px;
+      border-radius: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      text-shadow: 0 0 14px rgba(5, 10, 24, 0.95);
+    }
+
+    .hud-stat strong {
+      display: block;
+      font-size: clamp(0.95rem, 1.8vw, 1.18rem);
+      line-height: 1.05;
+    }
+
+    .hud-stat span {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(121, 242, 255, 0.22), rgba(145, 91, 255, 0.38)),
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.18), transparent 60%);
+      border: 1px solid rgba(121, 242, 255, 0.24);
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.76);
+      transform: rotate(22deg);
+      opacity: 0.58;
+    }
+
+    .brand-mark::after {
+      inset: 12px 4px;
+      transform: rotate(-18deg);
+      opacity: 0.34;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(0.74rem, 0.95vw, 0.9rem);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      white-space: normal;
+    }
+
+    .brand.panel {
+      padding: 2px 0 10px;
+      border-radius: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      text-shadow: 0 0 14px rgba(5, 10, 24, 0.95);
+    }
+
+    .primary-button,
+    .difficulty-button,
+    .secondary-button {
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .primary-button,
+    .difficulty-button,
+    .secondary-button {
+      padding: 14px 18px;
+      border-radius: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .primary-button {
+      background: linear-gradient(135deg, rgba(121, 242, 255, 0.95), rgba(145, 91, 255, 0.95));
+      color: #090512;
+    }
+
+    .difficulty-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .difficulty-button {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: left;
+    }
+
+    .difficulty-button.active {
+      background: linear-gradient(135deg, rgba(121, 242, 255, 0.16), rgba(145, 91, 255, 0.22));
+      border-color: rgba(121, 242, 255, 0.3);
+      box-shadow: 0 0 24px rgba(121, 242, 255, 0.12);
+    }
+
+    .difficulty-button strong,
+    .difficulty-button span {
+      display: block;
+    }
+
+    .difficulty-button strong {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .difficulty-button span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .secondary-button {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .primary-button:hover,
+    .difficulty-button:hover,
+    .secondary-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    #battlefield { z-index: 5; overflow: hidden; }
+
+    #ship {
+      position: absolute;
+      left: 50%;
+      bottom: 26px;
+      width: 98px;
+      height: 108px;
+      transform: translateX(-50%);
+      z-index: 8;
+      filter: drop-shadow(0 0 18px rgba(121, 242, 255, 0.42));
+    }
+
+    #ship::before,
+    #ship::after,
+    .ship-core {
+      content: "";
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #ship::before {
+      width: 34px;
+      height: 74px;
+      bottom: 18px;
+      clip-path: polygon(50% 0%, 100% 84%, 76% 100%, 50% 80%, 24% 100%, 0% 84%);
+      background: linear-gradient(180deg, rgba(121, 242, 255, 0.95), rgba(145, 91, 255, 0.86));
+      border-radius: 12px;
+    }
+
+    #ship::after {
+      width: 98px;
+      height: 50px;
+      bottom: 28px;
+      clip-path: polygon(50% 0%, 100% 40%, 82% 72%, 56% 60%, 50% 100%, 44% 60%, 18% 72%, 0% 40%);
+      background: linear-gradient(180deg, rgba(30, 32, 55, 0.95), rgba(63, 53, 128, 0.92));
+      border: 1px solid rgba(121, 242, 255, 0.32);
+    }
+
+    .ship-core {
+      width: 18px;
+      height: 18px;
+      bottom: 48px;
+      border-radius: 50%;
+      background: radial-gradient(circle, white 0%, rgba(121, 242, 255, 1) 30%, rgba(145, 91, 255, 0.12) 75%);
+      box-shadow: 0 0 22px rgba(121, 242, 255, 0.95);
+    }
+
+    #shipThruster {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 24px;
+      height: 40px;
+      transform: translateX(-50%);
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      background: linear-gradient(180deg, rgba(121, 242, 255, 0.82), rgba(121, 242, 255, 0.06));
+      animation: thrusterPulse 0.16s ease-in-out infinite alternate;
+    }
+
+    .enemy {
+      position: absolute;
+      pointer-events: none;
+      will-change: transform;
+      transition: filter 120ms ease;
+    }
+
+    .enemy.small { width: 82px; height: 86px; }
+    .enemy.large { width: 126px; height: 122px; }
+
+    .enemy-body {
+      position: absolute;
+      inset: auto 0 0;
+      height: calc(100% - 24px);
+      clip-path: polygon(50% 0%, 95% 38%, 82% 100%, 18% 100%, 5% 38%);
+      background: linear-gradient(180deg, rgba(34, 34, 54, 0.96), rgba(14, 14, 25, 0.98));
+      border: 1px solid rgba(145, 91, 255, 0.34);
+      box-shadow: inset 0 0 18px rgba(121, 242, 255, 0.08);
+    }
+
+    .enemy-body::before,
+    .enemy-body::after {
+      content: "";
+      position: absolute;
+      top: 34%;
+      width: 18%;
+      height: 22%;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(121, 242, 255, 0.3), rgba(121, 242, 255, 0.06));
+    }
+
+    .enemy-body::before { left: 10%; transform: skewX(-22deg); }
+    .enemy-body::after { right: 10%; transform: skewX(22deg); }
+
+    .enemy-core {
+      position: absolute;
+      left: 50%;
+      top: 44%;
+      width: 18px;
+      height: 18px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, white 0%, rgba(255, 112, 168, 0.95) 35%, rgba(255, 112, 168, 0.08) 70%);
+      box-shadow: 0 0 16px rgba(255, 111, 145, 0.62);
+    }
+
+    .enemy.large .enemy-core {
+      width: 24px;
+      height: 24px;
+      background: radial-gradient(circle, white 0%, rgba(255, 211, 110, 0.95) 32%, rgba(255, 211, 110, 0.08) 72%);
+      box-shadow: 0 0 18px rgba(255, 211, 110, 0.62);
+    }
+
+    .enemy-word {
+      position: absolute;
+      left: 50%;
+      top: -12px;
+      transform: translate(-50%, -100%);
+      display: flex;
+      gap: 1px;
+      padding: 7px 10px;
+      border-radius: 12px;
+      background: rgba(9, 9, 20, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      white-space: nowrap;
+      letter-spacing: 0.06em;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+    }
+
+    .enemy-word span { transition: color 100ms ease, transform 100ms ease; }
+    .enemy-word .done { color: var(--green); text-shadow: 0 0 12px rgba(117, 243, 167, 0.55); }
+    .enemy-word .wrong { color: var(--red); text-shadow: 0 0 12px rgba(255, 105, 142, 0.55); transform: translateY(-2px); }
+    .enemy.active { filter: drop-shadow(0 0 16px rgba(121, 242, 255, 0.32)); }
+    .enemy.active .enemy-body { border-color: rgba(121, 242, 255, 0.52); }
+
+    .laser {
+      position: absolute;
+      height: 3px;
+      transform-origin: 0 50%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(121, 242, 255, 0), rgba(121, 242, 255, 0.82) 25%, rgba(255, 255, 255, 0.94) 60%, rgba(255, 255, 255, 0));
+      box-shadow: 0 0 12px rgba(121, 242, 255, 0.62);
+      animation: laserFade 220ms ease-out forwards;
+      z-index: 7;
+    }
+
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--particle-color, white);
+      box-shadow: 0 0 12px var(--particle-color, white);
+      z-index: 9;
+    }
+
+    .impact-ring {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      animation: ringBlast 450ms ease-out forwards;
+      z-index: 9;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: clamp(16px, 4vw, 32px);
+      background: rgba(3, 3, 10, 0.58);
+      backdrop-filter: blur(14px);
+      transition: opacity 200ms ease, visibility 200ms ease;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .modal {
+      width: min(520px, calc(100% - 4px));
+      max-width: 100%;
+      max-height: min(calc(100% - 8px), 760px);
+      overflow: auto;
+      padding: clamp(18px, 3vw, 28px);
+      border-radius: 22px;
+      border: 1px solid rgba(145, 91, 255, 0.24);
+      background: linear-gradient(180deg, rgba(12, 10, 24, 0.96), rgba(8, 8, 17, 0.95));
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 0.76rem;
+      color: var(--cyan);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .modal h2,
+    .summary-title {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 3.2rem);
+      line-height: 0.98;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .summary-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .field-label {
+      display: grid;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .text-field {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(121, 242, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      outline: none;
+    }
+
+    .text-field:focus {
+      border-color: rgba(121, 242, 255, 0.38);
+      box-shadow: 0 0 0 4px rgba(121, 242, 255, 0.1);
+    }
+
+    .actions,
+    .ranking-list,
+    .legend-list,
+    .summary-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .ranking-item,
+    .legend-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+    }
+
+    .ranking-item strong,
+    .legend-item strong {
+      color: var(--text);
+    }
+
+    .summary-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .summary-card {
+      padding: 15px 13px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .summary-card strong {
+      display: block;
+      font-size: clamp(1.1rem, 2.4vw, 1.7rem);
+      margin-bottom: 4px;
+    }
+
+    .summary-card span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    #waveBanner {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      transform: translateY(-6px) scale(0.96);
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: rgba(9, 9, 19, 0.84);
+      border: 1px solid rgba(121, 242, 255, 0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+      z-index: 25;
+    }
+
+    #waveBanner.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    #focusHint {
+      position: absolute;
+      left: 18px;
+      bottom: 132px;
+      padding: 9px 14px;
+      border-radius: 14px;
+      background: rgba(9, 9, 19, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.82rem;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 140ms ease;
+      z-index: 26;
+    }
+
+    #focusHint.show { opacity: 1; }
+
+    #typeInput {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      left: 6px;
+      bottom: 6px;
+      opacity: 0.001;
+      border: none;
+      resize: none;
+      background: transparent;
+      color: transparent;
+      pointer-events: none;
+    }
+
+    .kbd {
+      padding: 4px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 0.8rem;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.22; }
+      50% { opacity: 1; }
+    }
+    @keyframes starDrift {
+      from { transform: translate3d(0, 0, 0) scale(var(--base-scale, 1)); }
+      to { transform: translate3d(var(--drift-x, 0px), var(--drift-y, 0px), 0) scale(calc(var(--base-scale, 1) * 1.04)); }
+    }
+    @keyframes moteFloat {
+      from { transform: translate3d(0, 0, 0) rotate(var(--mote-angle, 0deg)); }
+      to { transform: translate3d(var(--mote-drift-x, 0px), var(--mote-drift-y, 0px), 0) rotate(var(--mote-angle, 0deg)); }
+    }
+    @keyframes glowShift {
+      from { transform: translate3d(-2%, -1%, 0) scale(1); }
+      to { transform: translate3d(2%, 2%, 0) scale(1.04); }
+    }
+    @keyframes driftGrid { from { transform: translateY(0); } to { transform: translateY(28px); } }
+    @keyframes floatNebula { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(7vw,-3vh,0) scale(1.08); } }
+    @keyframes thrusterPulse { from { transform: translateX(-50%) scaleY(0.76); opacity: 0.68; } to { transform: translateX(-50%) scaleY(1.18); opacity: 1; } }
+    @keyframes laserFade { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes ringBlast { from { opacity: 0.85; transform: translate(-50%, -50%) scale(0.4); } to { opacity: 0; transform: translate(-50%, -50%) scale(3.8); } }
+
+    @media (max-width: 1080px) {
+      .layout-shell {
+        width: 100vw;
+        height: 100vh;
+        grid-template-columns: clamp(108px, 15vw, 148px) minmax(0, 1fr) clamp(108px, 15vw, 148px);
+        gap: 10px;
+        padding: 0 8px;
+      }
+      .app-shell { border-radius: 0; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .layout-shell {
+        grid-template-columns: clamp(84px, 18vw, 104px) minmax(0, 1fr) clamp(84px, 18vw, 104px);
+        gap: 6px;
+        padding: 0 4px;
+      }
+      .overlay { padding: 12px; background: rgba(3, 3, 10, 0.68); }
+      .modal { width: min(100%, 440px); max-height: calc(100% - 8px); }
+      .difficulty-row { grid-template-columns: 1fr; }
+      .hud-rail { gap: 8px; padding: 10px 2px 14px; }
+      .hud-stat { padding: 4px 0; }
+      .brand.panel { padding: 0 0 8px; }
+      .brand { gap: 8px; }
+      .brand-mark { width: 32px; height: 32px; }
+      .brand h1 { font-size: 0.66rem; letter-spacing: 0.09em; }
+      .brand p { font-size: 0.65rem; }
+      .hud-stat strong { font-size: 0.82rem; }
+      .hud-stat span { font-size: 0.58rem; letter-spacing: 0.1em; }
+      #focusHint { bottom: 118px; width: 112px; text-align: left; }
+      #waveBanner { right: 10px; top: 10px; }
+      #ship { transform: translateX(-50%) scale(0.88); bottom: 18px; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout-shell">
+    <div class="hud-rail left" id="hudLeft">
+      <div class="hud-section">
+        <div class="brand panel">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div>
+            <h1>Cosmoescrita</h1>
+            <p>Digitação orbital</p>
+          </div>
+        </div>
+        <div class="hud-stat panel"><strong id="comboValue">x1</strong><span>Combo</span></div>
+        <div class="hud-stat panel"><strong id="highScoreValue">0</strong><span>Recorde</span></div>
+        <div class="hud-stat panel"><strong id="modePill">Menu</strong><span>Status</span></div>
+        <div class="hud-stat panel"><strong id="typedPreview">-</strong><span>Alvo</span></div>
+      </div>
+    </div>
+
+    <div class="app-shell" id="appShell">
+      <div id="space">
+        <div class="nebula"></div>
+        <div class="nebula nebula-b"></div>
+        <div class="nebula nebula-c"></div>
+        <div id="spaceGlow"></div>
+        <div id="spaceDust"></div>
+        <div id="starfield"></div>
+        <div id="dangerVignette"></div>
+
+      <div id="battlefield"></div>
+      <div id="fxLayer"></div>
+      <div id="ship">
+        <div class="ship-core"></div>
+        <div id="shipThruster"></div>
+      </div>
+      <textarea id="typeInput" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text"></textarea>
+      <div id="focusHint">Toque para focar</div>
+      <div id="waveBanner">Onda 1</div>
+
+      <div class="overlay start" id="startOverlay">
+        <div class="modal">
+          <div>
+            <p class="eyebrow">Treino espacial</p>
+            <h2>Cosmoescrita</h2>
+            <p class="summary-copy">Escolha o ritmo e digite para abrir caminho.</p>
+          </div>
+          <div class="difficulty-row" role="group" aria-label="Selecionar dificuldade">
+            <button class="difficulty-button active" id="difficultyNormal" type="button" aria-pressed="true">
+              <strong>Normal</strong>
+              <span>Mais calmo para treinar.</span>
+            </button>
+            <button class="difficulty-button" id="difficultyHardcore" type="button" aria-pressed="false">
+              <strong>Hardcore</strong>
+              <span>Rápido, tenso e jogável.</span>
+            </button>
+          </div>
+          <div class="actions">
+            <button class="primary-button" id="startButton" type="button">Iniciar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay end hidden" id="endOverlay">
+        <div class="modal">
+          <div>
+            <p class="eyebrow" id="endEyebrow">Resultado</p>
+            <h2 class="summary-title" id="endTitle">Encerrado</h2>
+            <p class="summary-copy" id="endCopy"></p>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-card"><strong id="finalScore">0</strong><span>Pontuação</span></div>
+            <div class="summary-card"><strong id="finalWave">0</strong><span>Onda</span></div>
+            <div class="summary-card"><strong id="finalAccuracy">0%</strong><span>Precisão</span></div>
+          </div>
+          <div class="actions">
+            <button class="primary-button" id="playAgainButton" type="button">Jogar</button>
+            <button class="secondary-button" id="backMenuButton" type="button">Menu</button>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+    <div class="hud-rail right" id="hudRight">
+      <div class="hud-section">
+        <div class="hud-stat panel"><strong id="waveValue">0 / 50</strong><span>Onda</span></div>
+        <div class="hud-stat panel"><strong id="scoreValue">0</strong><span>Pontuação</span></div>
+        <div class="hud-stat panel"><strong id="accuracyValue">100%</strong><span>Precisão</span></div>
+        <div class="hud-stat panel"><strong id="totalWavesValue">50</strong><span>Total</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script id="fallback-pequenos" type="text/plain">astro
+laser
+pulso
+cometa
+orbita
+galaxia
+plasma
+neon
+vazio
+vortex
+foton
+quasar
+nexus
+radar
+casulo
+modulo
+sensor
+escudo
+piloto
+cosmos
+sonda
+fenda
+portal
+lumina
+vento
+campo
+drone
+raio
+rota
+glitch
+fluxo
+motor
+byte
+pixel
+script
+rede
+pulsar
+orbital
+sombra
+brilho
+nitro
+marte
+venus
+halo
+ritmo
+foco
+mente
+forca
+cifra
+senha
+chave
+trama
+frame
+combo
+score
+timer
+risco
+alerta
+visao
+janela
+codigo
+trovao
+fissao
+fusion
+zenite
+eclipse
+aurora
+prisma
+rocket
+shield
+target
+switch
+surto
+flare
+nuvem
+tatica
+navio
+rastro
+sonico
+vetor
+tracer
+orion
+hydra
+vital
+modem
+visor
+leitor
+blaster</script>
+  <script id="fallback-grandes" type="text/plain">astronauta
+hiperespaco
+constelacao
+supernova
+telemetria
+sincronia
+velocidade
+frequencia
+gravidade
+singularidade
+cosmologia
+navegacao
+inteligencia
+programacao
+propulsão
+aceleração
+percepção
+resistência
+interferência
+comunicação
+transmissão
+observatório
+cartografia
+luminosidade
+tempestade
+anomalia
+estabilidade
+ressonância
+hidrogênio
+oxigenação
+eletromagnético
+criptografia
+sincronização
+compatibilidade
+hipervínculo
+abastecimento
+infraestrutura
+alinhamento
+deslocamento
+interceptação
+reconfiguração
+processamento
+armazenamento
+mapeamento
+retroalimentação
+metamorfose
+complexidade
+visualização
+experimental
+conectividade
+adaptabilidade
+probabilidade
+radioatividade
+criatividade
+modulação
+laboratório
+neutralização
+escaneamento
+identificação
+convergência
+interatividade
+profundidade
+polarização
+transparência
+acessibilidade
+legibilidade
+arquitetura
+desempenho
+coordenação
+reconstrução
+otimização
+automatização
+intensidade
+autonomia
+resiliência
+consistência
+eficiência
+experiência
+usabilidade
+escalabilidade
+confiabilidade
+monitoramento
+orquestração
+reabastecimento
+desenvolvimento
+reconhecimento
+responsividade
+virtualização
+especialização
+personalização</script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const MAX_WAVES = 50;
+      const STORAGE_KEYS = {
+        highScore: "cosmoescrita-high-score",
+        ranking: "cosmoescrita-ranking"
+      };
+
+      const elements = {
+        appShell: document.getElementById("appShell"),
+        spaceDust: document.getElementById("spaceDust"),
+        starfield: document.getElementById("starfield"),
+        battlefield: document.getElementById("battlefield"),
+        fxLayer: document.getElementById("fxLayer"),
+        startOverlay: document.getElementById("startOverlay"),
+        endOverlay: document.getElementById("endOverlay"),
+        waveBanner: document.getElementById("waveBanner"),
+        focusHint: document.getElementById("focusHint"),
+        typeInput: document.getElementById("typeInput"),
+        startButton: document.getElementById("startButton"),
+        difficultyNormal: document.getElementById("difficultyNormal"),
+        difficultyHardcore: document.getElementById("difficultyHardcore"),
+        playAgainButton: document.getElementById("playAgainButton"),
+        backMenuButton: document.getElementById("backMenuButton"),
+        hudRight: document.getElementById("hudRight"),
+        modePill: document.getElementById("modePill"),
+        typedPreview: document.getElementById("typedPreview"),
+        waveValue: document.getElementById("waveValue"),
+        totalWavesValue: document.getElementById("totalWavesValue"),
+        scoreValue: document.getElementById("scoreValue"),
+        comboValue: document.getElementById("comboValue"),
+        accuracyValue: document.getElementById("accuracyValue"),
+        highScoreValue: document.getElementById("highScoreValue"),
+        dangerVignette: document.getElementById("dangerVignette"),
+        endEyebrow: document.getElementById("endEyebrow"),
+        endTitle: document.getElementById("endTitle"),
+        endCopy: document.getElementById("endCopy"),
+        finalScore: document.getElementById("finalScore"),
+        finalWave: document.getElementById("finalWave"),
+        finalAccuracy: document.getElementById("finalAccuracy")
+      };
+
+      const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const randomBetween = (min, max) => Math.random() * (max - min) + min;
+      const normalizeForCompare = (value) => value.toLocaleLowerCase("pt-BR").normalize("NFC");
+      const stripDiacritics = (value) => normalizeForCompare(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const splitChars = (value) => Array.from(normalizeForCompare(value));
+      const PT_LETTER_REGEX = /^[a-záàâãéêíóôõúç]+$/iu;
+
+      function parseWordList(text, mode) {
+        const unique = new Set();
+        return text
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .filter((word) => {
+            const key = normalizeForCompare(word);
+            if (unique.has(key)) return false;
+            const chars = splitChars(word);
+            const plain = stripDiacritics(word);
+            const isSmall = chars.length <= 7 && /^[a-z]+$/i.test(plain) && plain === key;
+            const isLarge = chars.length > 7 && PT_LETTER_REGEX.test(key);
+            if ((mode === "small" && !isSmall) || (mode === "large" && !isLarge)) return false;
+            unique.add(key);
+            return true;
+          });
+      }
+
+      async function loadWordLists() {
+        const fallbackSmall = document.getElementById("fallback-pequenos").textContent.trim();
+        const fallbackLarge = document.getElementById("fallback-grandes").textContent.trim();
+
+        async function fetchWords(path, fallback, mode) {
+          try {
+            const response = await fetch(path, { cache: "no-store" });
+            if (!response.ok) throw new Error("falha");
+            const words = parseWordList(await response.text(), mode);
+            if (!words.length) throw new Error("vazio");
+            return words;
+          } catch (error) {
+            return parseWordList(fallback, mode);
+          }
+        }
+
+        const [smallWords, largeWords] = await Promise.all([
+          fetchWords("pequenos.txt", fallbackSmall, "small"),
+          fetchWords("grandes.txt", fallbackLarge, "large")
+        ]);
+        return { smallWords, largeWords };
+      }
+
+      class AudioManager {
+        constructor() {
+          this.context = null;
+          this.muted = false;
+        }
+
+        ensure() {
+          if (this.muted) return null;
+          if (!this.context) {
+            const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextCtor) return null;
+            this.context = new AudioContextCtor();
+          }
+          if (this.context.state === "suspended") this.context.resume().catch(() => {});
+          return this.context;
+        }
+
+        setMuted(value) {
+          this.muted = value;
+        }
+
+        pulse({ frequency, duration, type = "sine", volume = 0.03, slideTo = null }) {
+          const ctx = this.ensure();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(frequency, now);
+          if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, now + duration);
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + duration + 0.02);
+        }
+
+        shoot() { this.pulse({ frequency: 680, duration: 0.08, type: "square", volume: 0.025, slideTo: 950 }); }
+        hit() { this.pulse({ frequency: 210, duration: 0.18, type: "triangle", volume: 0.05, slideTo: 90 }); }
+        success() { this.pulse({ frequency: 520, duration: 0.12, type: "triangle", volume: 0.03, slideTo: 720 }); }
+        error() { this.pulse({ frequency: 190, duration: 0.07, type: "sawtooth", volume: 0.024, slideTo: 150 }); }
+        loseLife() { this.pulse({ frequency: 160, duration: 0.2, type: "sawtooth", volume: 0.038, slideTo: 70 }); }
+      }
+
+      class WordBank {
+        constructor(smallWords, largeWords) {
+          this.words = { small: [...smallWords], large: [...largeWords] };
+          this.recent = { small: [], large: [] };
+          this.pool = { small: [], large: [] };
+          this.preview = { small: null, large: null };
+          this.refresh("small");
+          this.refresh("large");
+        }
+
+        refresh(type) {
+          const recent = this.recent[type];
+          const ordered = this.words[type]
+            .filter((word) => !recent.includes(word))
+            .concat(this.words[type].filter((word) => recent.includes(word)))
+            .sort(() => Math.random() - 0.5);
+          this.pool[type] = ordered;
+          this.preview[type] = null;
+        }
+
+        peek(type) {
+          if (!this.pool[type].length) this.refresh(type);
+          if (!this.preview[type]) this.preview[type] = this.pool[type][0];
+          return this.preview[type];
+        }
+
+        next(type) {
+          const word = this.peek(type);
+          this.pool[type].shift();
+          this.preview[type] = null;
+          this.recent[type].push(word);
+          if (this.recent[type].length > 18) this.recent[type].shift();
+          return word;
+        }
+      }
+
+      class Enemy {
+        constructor(game, { id, type, word, x, speed, laneDrift }) {
+          this.game = game;
+          this.id = id;
+          this.type = type;
+          this.word = normalizeForCompare(word);
+          this.wordChars = splitChars(word);
+          this.progress = 0;
+          this.width = type === "small" ? 82 : 126;
+          this.height = type === "small" ? 86 : 122;
+          this.visualMetrics = this.game.measureEnemyVisualMetrics(type, this.word);
+          this.x = x;
+          this.y = -150;
+          this.speed = speed;
+          this.laneDrift = laneDrift;
+          this.velocityX = randomBetween(-22, 22);
+          this.velocityY = speed;
+          this.wobble = randomBetween(0, Math.PI * 2);
+          this.dead = false;
+          this.errorIndex = -1;
+          this.errorUntil = 0;
+
+          this.element = document.createElement("div");
+          this.element.className = `enemy ${type}`;
+          this.wordEl = document.createElement("div");
+          this.wordEl.className = "enemy-word";
+          this.bodyEl = document.createElement("div");
+          this.bodyEl.className = "enemy-body";
+          this.coreEl = document.createElement("div");
+          this.coreEl.className = "enemy-core";
+          this.bodyEl.appendChild(this.coreEl);
+          this.element.append(this.wordEl, this.bodyEl);
+          this.charSpans = [];
+
+          for (const char of this.wordChars) {
+            const span = document.createElement("span");
+            span.textContent = char;
+            this.charSpans.push(span);
+            this.wordEl.appendChild(span);
+          }
+
+          this.updateWordDisplay(false, -1);
+          this.render();
+          this.game.dom.battlefield.appendChild(this.element);
+        }
+
+        update(delta, now) {
+          const target = this.game.getShipTarget();
+          const center = this.center();
+          const dx = target.x - center.x;
+          const dy = target.y - center.y;
+          const distance = Math.max(1, Math.hypot(dx, dy));
+          const chaseX = (dx / distance) * this.speed * (this.type === "small" ? 1.26 : 0.92);
+          const chaseY = (dy / distance) * this.speed * (this.type === "small" ? 1.6 : 1.24);
+          this.wobble += delta * (this.type === "small" ? 7 : 4.6);
+          this.velocityX = lerp(this.velocityX, chaseX + Math.sin(this.wobble) * this.laneDrift, 0.09);
+          this.velocityY = lerp(this.velocityY, Math.max(this.speed * 0.94, chaseY + this.speed * 0.82), 0.12);
+          this.x += this.velocityX * delta;
+          this.y += this.velocityY * delta;
+          this.x = this.game.clampEnemyX(this, this.x);
+          if (this.errorUntil && now > this.errorUntil) {
+            this.errorIndex = -1;
+            this.errorUntil = 0;
+          }
+          this.render();
+        }
+
+        render() {
+          this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+        }
+
+        updateWordDisplay(isActive, wrongIndex = -1) {
+          this.element.classList.toggle("active", isActive);
+          for (let index = 0; index < this.charSpans.length; index += 1) {
+            const span = this.charSpans[index];
+            span.className = "";
+            if (index < this.progress) span.classList.add("done");
+            else if (wrongIndex === index) span.classList.add("wrong");
+          }
+        }
+
+        registerWrong(now) {
+          this.errorIndex = this.progress;
+          this.errorUntil = now + 0.18;
+          this.updateWordDisplay(this.game.activeEnemy === this, this.errorIndex);
+        }
+
+        nextExpectedChar() {
+          return this.wordChars[this.progress];
+        }
+
+        isCompleted() {
+          return this.progress >= this.wordChars.length;
+        }
+
+        center() {
+          return { x: this.x + this.width / 2, y: this.y + this.height / 2 };
+        }
+
+        collisionBounds(x = this.x, y = this.y) {
+          const centerX = x + this.width / 2;
+          return {
+            left: centerX - this.visualMetrics.width / 2,
+            right: centerX + this.visualMetrics.width / 2,
+            top: y - this.visualMetrics.wordOffset,
+            bottom: y + this.height
+          };
+        }
+
+        destroy() {
+          this.dead = true;
+          this.element.remove();
+        }
+      }
+
+      class Particle {
+        constructor(game, x, y, color, size, velocityX, velocityY, life) {
+          this.game = game;
+          this.x = x;
+          this.y = y;
+          this.velocityX = velocityX;
+          this.velocityY = velocityY;
+          this.life = life;
+          this.initialLife = life;
+          this.element = document.createElement("div");
+          this.element.className = "particle";
+          this.element.style.setProperty("--particle-color", color);
+          this.element.style.width = `${size}px`;
+          this.element.style.height = `${size}px`;
+          this.game.dom.fxLayer.appendChild(this.element);
+          this.render();
+        }
+
+        update(delta) {
+          this.life -= delta;
+          this.x += this.velocityX * delta;
+          this.y += this.velocityY * delta;
+          this.velocityY += 28 * delta;
+          this.render();
+          return this.life > 0;
+        }
+
+        render() {
+          const opacity = clamp(this.life / this.initialLife, 0, 1);
+          this.element.style.opacity = opacity.toFixed(3);
+          this.element.style.transform = `translate(${this.x}px, ${this.y}px) scale(${lerp(0.45, 1.18, opacity)})`;
+        }
+
+        destroy() {
+          this.element.remove();
+        }
+      }
+
+      class Laser {
+        constructor(game, fromX, fromY, toX, toY) {
+          this.life = 0.22;
+          this.element = document.createElement("div");
+          this.element.className = "laser";
+          const dx = toX - fromX;
+          const dy = toY - fromY;
+          const length = Math.hypot(dx, dy);
+          const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          this.element.style.width = `${length}px`;
+          this.element.style.left = `${fromX}px`;
+          this.element.style.top = `${fromY}px`;
+          this.element.style.transform = `rotate(${angle}deg)`;
+          game.dom.fxLayer.appendChild(this.element);
+        }
+
+        update(delta) {
+          this.life -= delta;
+          return this.life > 0;
+        }
+
+        destroy() {
+          this.element.remove();
+        }
+      }
+
+      class Game {
+        constructor(wordBank, audio) {
+          this.wordBank = wordBank;
+          this.audio = audio;
+          this.dom = elements;
+          this.state = "menu";
+          this.wave = 0;
+          this.score = 0;
+          this.combo = 1;
+          this.correctChars = 0;
+          this.wrongChars = 0;
+          this.elapsed = 0;
+          this.enemies = [];
+          this.particles = [];
+          this.lasers = [];
+          this.activeEnemy = null;
+          this.pendingWave = null;
+          this.pendingSpawns = [];
+          this.spawnTimer = 0;
+          this.waveDelay = 0;
+          this.waveKills = 0;
+          this.waveTotal = 0;
+          this.lastKillAt = 0;
+          this.lastFrame = 0;
+          this.focusTimer = 0;
+          this.shake = 0;
+          this.pressedKeys = new Set();
+          this.enemyCounter = 0;
+          this.activeBuffer = "";
+          this.difficulty = "normal";
+          this.highScore = Number(localStorage.getItem(STORAGE_KEYS.highScore) || 0);
+          this.ranking = this.loadRanking();
+          this.wordMeasure = document.createElement("div");
+          this.wordMeasure.className = "enemy-word";
+          this.wordMeasure.setAttribute("aria-hidden", "true");
+          this.wordMeasure.style.position = "absolute";
+          this.wordMeasure.style.left = "-9999px";
+          this.wordMeasure.style.top = "-9999px";
+          this.wordMeasure.style.transform = "none";
+          this.wordMeasure.style.visibility = "hidden";
+          this.wordMeasure.style.pointerEvents = "none";
+          this.dom.appShell.appendChild(this.wordMeasure);
+          this.createStars();
+          this.syncDifficultyButtons();
+          this.syncHighScore();
+          this.bindEvents();
+          this.updateHUD();
+          this.loop = this.loop.bind(this);
+          this.animationFrame = requestAnimationFrame(this.loop);
+        }
+
+        loadRanking() {
+          try {
+            const ranking = JSON.parse(localStorage.getItem(STORAGE_KEYS.ranking) || "[]");
+            return Array.isArray(ranking) ? ranking.slice(0, 5) : [];
+          } catch (error) {
+            return [];
+          }
+        }
+
+        saveRanking(entry) {
+          this.ranking.push(entry);
+          this.ranking.sort((a, b) => b.score - a.score);
+          this.ranking = this.ranking.slice(0, 5);
+          localStorage.setItem(STORAGE_KEYS.ranking, JSON.stringify(this.ranking));
+          this.syncHighScore();
+        }
+
+        syncHighScore() {
+          this.dom.highScoreValue.textContent = this.highScore.toString();
+        }
+
+        syncDifficultyButtons() {
+          const isNormal = this.difficulty === "normal";
+          this.dom.difficultyNormal.classList.toggle("active", isNormal);
+          this.dom.difficultyHardcore.classList.toggle("active", !isNormal);
+          this.dom.difficultyNormal.setAttribute("aria-pressed", String(isNormal));
+          this.dom.difficultyHardcore.setAttribute("aria-pressed", String(!isNormal));
+        }
+
+        bindEvents() {
+          window.addEventListener("keydown", (event) => this.handleKeyDown(event), true);
+          window.addEventListener("keyup", (event) => this.pressedKeys.delete(event.code), true);
+          window.addEventListener("blur", () => {
+            this.pressedKeys.clear();
+            if (this.state === "running") this.setFocusHint(true);
+          });
+          window.addEventListener("resize", () => this.createStars(true));
+          this.dom.typeInput.addEventListener("beforeinput", (event) => this.handleBeforeInput(event));
+          this.dom.typeInput.addEventListener("input", (event) => this.handleInput(event));
+          this.dom.typeInput.addEventListener("blur", () => {
+            if (this.state === "running") setTimeout(() => this.maintainInputFocus(true), 0);
+          });
+          this.dom.startButton.addEventListener("click", () => this.start());
+          this.dom.difficultyNormal.addEventListener("click", () => this.setDifficulty("normal"));
+          this.dom.difficultyHardcore.addEventListener("click", () => this.setDifficulty("hardcore"));
+          this.dom.playAgainButton.addEventListener("click", () => this.start());
+          this.dom.backMenuButton.addEventListener("click", () => this.showMenu());
+          this.dom.appShell.addEventListener("pointerdown", () => {
+            if (this.state === "running") this.maintainInputFocus(true);
+          });
+        }
+
+        setDifficulty(mode) {
+          this.difficulty = mode;
+          this.syncDifficultyButtons();
+        }
+
+        createStars(force = false) {
+          const isCompact = window.innerWidth < 720;
+          const starCount = isCompact ? 64 : 116;
+          const moteCount = isCompact ? 16 : 28;
+          if (!force
+            && this.dom.starfield.childElementCount === starCount
+            && this.dom.spaceDust.childElementCount === moteCount) return;
+          this.dom.starfield.innerHTML = "";
+          this.dom.spaceDust.innerHTML = "";
+          for (let index = 0; index < starCount; index += 1) {
+            const star = document.createElement("div");
+            const depth = index % 3;
+            star.className = `star depth-${depth + 1}`;
+            const size = depth === 0 ? randomBetween(0.8, 1.7) : depth === 1 ? randomBetween(1.2, 2.4) : randomBetween(1.8, 3.6);
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${randomBetween(0, 100)}%`;
+            star.style.top = `${randomBetween(0, 100)}%`;
+            star.style.setProperty("--twinkle", `${randomBetween(1.6, 4.8)}s`);
+            star.style.setProperty("--drift-duration", `${randomBetween(14 + depth * 6, 28 + depth * 8)}s`);
+            star.style.setProperty("--drift-x", `${randomBetween(-(depth + 1) * 10, (depth + 1) * 10).toFixed(1)}px`);
+            star.style.setProperty("--drift-y", `${randomBetween((depth + 1) * 8, (depth + 1) * 26).toFixed(1)}px`);
+            star.style.setProperty("--base-scale", `${randomBetween(0.88, 1.12).toFixed(2)}`);
+            star.style.setProperty("--star-opacity", `${randomBetween(depth === 0 ? 0.22 : 0.38, depth === 2 ? 0.94 : 0.78).toFixed(2)}`);
+            this.dom.starfield.appendChild(star);
+          }
+          for (let index = 0; index < moteCount; index += 1) {
+            const mote = document.createElement("div");
+            mote.className = "space-mote";
+            mote.style.left = `${randomBetween(-8, 96)}%`;
+            mote.style.top = `${randomBetween(-6, 100)}%`;
+            mote.style.setProperty("--mote-width", `${randomBetween(14, 30).toFixed(1)}px`);
+            mote.style.setProperty("--mote-height", `${randomBetween(1.2, 2.4).toFixed(1)}px`);
+            mote.style.setProperty("--mote-opacity", `${randomBetween(0.08, 0.22).toFixed(2)}`);
+            mote.style.setProperty("--mote-duration", `${randomBetween(12, 24).toFixed(1)}s`);
+            mote.style.setProperty("--mote-twinkle", `${randomBetween(3.8, 7.2).toFixed(1)}s`);
+            mote.style.setProperty("--mote-angle", `${randomBetween(-18, 18).toFixed(1)}deg`);
+            mote.style.setProperty("--mote-drift-x", `${randomBetween(18, 58).toFixed(1)}px`);
+            mote.style.setProperty("--mote-drift-y", `${randomBetween(36, 120).toFixed(1)}px`);
+            this.dom.spaceDust.appendChild(mote);
+          }
+        }
+
+        getShipTarget() {
+          const bounds = this.getPlayfieldBounds();
+          return { x: bounds.left + bounds.width / 2, y: this.dom.appShell.clientHeight - 88 };
+        }
+
+        getPlayfieldBounds() {
+          const shellWidth = this.dom.appShell.clientWidth;
+          if (shellWidth <= 720) {
+            const inset = clamp(shellWidth * 0.1, 20, 36);
+            return { left: inset, right: shellWidth - inset, width: shellWidth - inset * 2 };
+          }
+          const inset = clamp(shellWidth * 0.08, 56, 104);
+          return { left: inset, right: shellWidth - inset, width: shellWidth - inset * 2 };
+        }
+
+        measureEnemyVisualMetrics(type, word) {
+          const shipWidth = type === "small" ? 82 : 126;
+          const wordOffset = 36;
+          this.wordMeasure.textContent = word;
+          const wordWidth = Math.ceil(this.wordMeasure.getBoundingClientRect().width);
+          return {
+            width: Math.max(shipWidth, wordWidth + 6),
+            wordWidth,
+            wordOffset
+          };
+        }
+
+        clampEnemyX(enemy, proposedX) {
+          const bounds = this.getPlayfieldBounds();
+          const halfVisual = enemy.visualMetrics.width / 2;
+          const minX = bounds.left + halfVisual - enemy.width / 2;
+          const maxX = bounds.right - halfVisual - enemy.width / 2;
+          if (maxX < minX) return (minX + maxX) / 2;
+          return clamp(proposedX, minX, maxX);
+        }
+
+        maintainInputFocus(force = false) {
+          if (this.state !== "running") return;
+          if (force || document.activeElement !== this.dom.typeInput) {
+            this.dom.typeInput.focus({ preventScroll: true });
+            const end = this.dom.typeInput.value.length;
+            this.dom.typeInput.setSelectionRange(end, end);
+          }
+          this.setFocusHint(false);
+        }
+
+        setFocusHint(visible) {
+          this.dom.focusHint.classList.toggle("show", visible);
+        }
+
+        start() {
+          this.resetState();
+          this.dom.startOverlay.classList.add("hidden");
+          this.dom.endOverlay.classList.add("hidden");
+          this.state = "running";
+          this.audio.ensure();
+          this.maintainInputFocus(true);
+          this.queueNextWave();
+          this.updateHUD();
+        }
+
+        showMenu() {
+          this.resetState();
+          this.state = "menu";
+          this.dom.startOverlay.classList.remove("hidden");
+          this.dom.endOverlay.classList.add("hidden");
+          this.updateHUD();
+        }
+
+        resetState() {
+          this.clearEntities();
+          this.wave = 0;
+          this.score = 0;
+          this.combo = 1;
+          this.correctChars = 0;
+          this.wrongChars = 0;
+          this.elapsed = 0;
+          this.waveKills = 0;
+          this.waveTotal = 0;
+          this.pendingWave = null;
+          this.pendingSpawns = [];
+          this.spawnTimer = 0;
+          this.waveDelay = 0;
+          this.lastKillAt = 0;
+          this.activeEnemy = null;
+          this.activeBuffer = "";
+          this.shake = 0;
+          this.focusTimer = 0;
+          this.dom.typeInput.value = "";
+          this.setDanger(0);
+          this.updateHUD();
+        }
+
+        clearEntities() {
+          this.enemies.forEach((enemy) => enemy.destroy());
+          this.particles.forEach((particle) => particle.destroy());
+          this.lasers.forEach((laser) => laser.destroy());
+          this.enemies = [];
+          this.particles = [];
+          this.lasers = [];
+          this.activeEnemy = null;
+          this.dom.battlefield.innerHTML = "";
+          this.dom.fxLayer.innerHTML = "";
+        }
+
+        queueNextWave() {
+          if (this.wave >= MAX_WAVES) return this.win();
+          this.wave += 1;
+          const config = this.getWaveConfig(this.wave);
+          this.pendingWave = config;
+          this.pendingSpawns = [...Array(config.small).fill("small"), ...Array(config.large).fill("large")].sort(() => Math.random() - 0.5);
+          this.waveTotal = this.pendingSpawns.length;
+          this.waveKills = 0;
+          this.waveDelay = 0.72;
+          this.spawnTimer = 0.2;
+          this.showWaveBanner(`Onda ${this.wave}`);
+          this.audio.success();
+        }
+
+        getWaveConfig(wave) {
+          const baseSmall = wave <= 10 ? wave : 20;
+          const small = Math.max(1, Math.ceil(baseSmall / 2));
+          const large = Math.min(5, Math.floor((wave - 1) / 10) + 1);
+          const speedStep = Math.min(wave, 10);
+          const baseIntensity = 0.82 + speedStep * 0.12;
+          const intensity = baseIntensity * (this.difficulty === "hardcore" ? 0.5 : 0.25);
+          const spawnInterval = wave <= 10
+            ? Math.max(0.34, 0.94 - wave * 0.045)
+            : 0.5;
+          return { small, large, intensity, spawnInterval };
+        }
+
+        showWaveBanner(text) {
+          this.dom.waveBanner.textContent = text;
+          this.dom.waveBanner.classList.add("show");
+          clearTimeout(this.waveBannerTimer);
+          this.waveBannerTimer = setTimeout(() => this.dom.waveBanner.classList.remove("show"), 900);
+        }
+
+        loop(timestamp) {
+          if (!this.lastFrame) this.lastFrame = timestamp;
+          const delta = clamp((timestamp - this.lastFrame) / 1000, 0, 0.033);
+          this.lastFrame = timestamp;
+          if (this.state === "running") this.update(delta, timestamp / 1000);
+          else this.applyShake(delta);
+          requestAnimationFrame(this.loop);
+        }
+
+        update(delta, now) {
+          this.elapsed += delta;
+          this.applyShake(delta);
+          this.focusTimer += delta;
+          if (this.focusTimer >= 0.35) {
+            this.focusTimer = 0;
+            this.maintainInputFocus(false);
+          }
+
+          if (this.waveDelay > 0) this.waveDelay -= delta;
+          else if (this.pendingSpawns.length) {
+            this.spawnTimer -= delta;
+            if (this.spawnTimer <= 0) {
+              const nextType = this.pendingSpawns[0];
+              const spawned = this.spawnEnemy(nextType);
+              this.spawnTimer = spawned
+                ? this.pendingWave.spawnInterval * randomBetween(0.78, 1.04)
+                : this.getSpawnSpacing(nextType).retryDelay;
+              if (spawned) this.pendingSpawns.shift();
+            }
+          }
+
+          for (let index = this.enemies.length - 1; index >= 0; index -= 1) {
+            const enemy = this.enemies[index];
+            enemy.update(delta, now);
+            enemy.updateWordDisplay(this.activeEnemy === enemy, enemy.errorUntil > now ? enemy.errorIndex : -1);
+            if (enemy.center().y >= this.getDangerLine()) {
+              this.enemyReachedBase(enemy);
+              break;
+            }
+          }
+
+          this.particles = this.particles.filter((particle) => {
+            const alive = particle.update(delta);
+            if (!alive) particle.destroy();
+            return alive;
+          });
+
+          this.lasers = this.lasers.filter((laser) => {
+            const alive = laser.update(delta);
+            if (!alive) laser.destroy();
+            return alive;
+          });
+
+          this.refreshDanger();
+          if (!this.pendingSpawns.length && !this.enemies.length && this.wave > 0 && this.waveKills >= this.waveTotal) this.queueNextWave();
+          if (this.lastKillAt && now - this.lastKillAt > 3.2) this.combo = 1;
+          this.updateHUD();
+        }
+
+        applyShake(delta) {
+          this.shake = Math.max(0, this.shake - delta * 3.6);
+          const strength = this.shake * 12;
+          this.dom.appShell.style.setProperty("--shake-x", `${randomBetween(-strength, strength).toFixed(2)}px`);
+          this.dom.appShell.style.setProperty("--shake-y", `${randomBetween(-strength, strength).toFixed(2)}px`);
+        }
+
+        getDangerLine() {
+          return this.dom.appShell.clientHeight - 120;
+        }
+
+        getSpawnSpacing(type) {
+          return type === "small"
+            ? { horizontal: 22, vertical: 34, retryDelay: 0.12 }
+            : { horizontal: 28, vertical: 42, retryDelay: 0.14 };
+        }
+
+        canUseSpawnBounds(candidateBounds, spacing) {
+          return !this.enemies.some((enemy) => {
+            const bounds = enemy.collisionBounds();
+            const horizontalGap = Math.max(bounds.left - candidateBounds.right, candidateBounds.left - bounds.right, 0);
+            const verticalGap = Math.max(bounds.top - candidateBounds.bottom, candidateBounds.top - bounds.bottom, 0);
+            return horizontalGap < spacing.horizontal && verticalGap < spacing.vertical;
+          });
+        }
+
+        findSpawnX(type, word) {
+          const metrics = this.measureEnemyVisualMetrics(type, word);
+          const spacing = this.getSpawnSpacing(type);
+          const bounds = this.getPlayfieldBounds();
+          const shipWidth = type === "small" ? 82 : 126;
+          const shipHeight = type === "small" ? 86 : 122;
+          const minCenter = bounds.left + metrics.width / 2;
+          const maxCenter = bounds.right - metrics.width / 2;
+          if (minCenter > maxCenter) return null;
+
+          const centers = [];
+          const step = Math.max(26, Math.floor(metrics.width * 0.24));
+          for (let center = minCenter; center <= maxCenter; center += step) centers.push(center);
+          if (!centers.length || centers[centers.length - 1] !== maxCenter) centers.push(maxCenter);
+          centers.sort(() => Math.random() - 0.5);
+
+          for (const centerX of centers) {
+            const candidateBounds = {
+              left: centerX - metrics.width / 2,
+              right: centerX + metrics.width / 2,
+              top: -150 - metrics.wordOffset,
+              bottom: -150 + shipHeight
+            };
+            if (this.canUseSpawnBounds(candidateBounds, spacing)) {
+              return centerX - shipWidth / 2;
+            }
+          }
+          return null;
+        }
+
+        spawnEnemy(type) {
+          const word = this.wordBank.peek(type);
+          const spawnX = this.findSpawnX(type, word);
+          if (spawnX == null) return false;
+          this.wordBank.next(type);
+          const speedBase = type === "small" ? 102 : 70;
+          const speed = speedBase * this.pendingWave.intensity * randomBetween(0.94, 1.18);
+          this.enemies.push(new Enemy(this, {
+            id: ++this.enemyCounter,
+            type,
+            word,
+            x: spawnX,
+            speed,
+            laneDrift: type === "small" ? randomBetween(18, 34) : randomBetween(10, 18)
+          }));
+          return true;
+        }
+
+        shouldHandleChar(event) {
+          return !event.ctrlKey && !event.metaKey && !event.altKey && event.key.length === 1;
+        }
+
+        handleKeyDown(event) {
+          if (this.pressedKeys.has(event.code) && event.key !== "Backspace") return;
+          this.pressedKeys.add(event.code);
+          if (this.state !== "running") return;
+          this.maintainInputFocus(false);
+          if (event.key === "Backspace") {
+            event.preventDefault();
+            return this.processBackspace();
+          }
+          if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Tab"].includes(event.code)) event.preventDefault();
+          if (this.shouldHandleChar(event)) return;
+        }
+
+        handleBeforeInput(event) {
+          if (this.state !== "running") return;
+          if (event.inputType === "deleteContentBackward") {
+            event.preventDefault();
+            this.processBackspace();
+            this.dom.typeInput.value = "";
+          }
+        }
+
+        handleInput(event) {
+          if (this.state !== "running") {
+            this.dom.typeInput.value = "";
+            return;
+          }
+          const typed = event.data ?? this.dom.typeInput.value;
+          this.dom.typeInput.value = "";
+          if (event.inputType === "deleteContentBackward" || !typed) return;
+          this.processTextEntry(typed);
+        }
+
+        processTextEntry(text) {
+          for (const char of text) {
+            const typedChar = normalizeForCompare(char);
+            if (/\S/u.test(typedChar)) this.processCharacter(typedChar);
+          }
+        }
+
+        processCharacter(char) {
+          if (!PT_LETTER_REGEX.test(char)) return;
+          const nextBuffer = this.activeBuffer + char;
+          let target = this.resolveTarget(nextBuffer);
+          if (!target) return this.registerWrong(null);
+          this.activeEnemy = target;
+          this.activeBuffer = nextBuffer;
+          if (char === target.nextExpectedChar()) {
+            target.progress += 1;
+            this.correctChars += 1;
+            this.audio.shoot();
+            this.syncActiveWord();
+            if (target.isCompleted()) this.killEnemy(target);
+          } else {
+            this.registerWrong(target);
+          }
+        }
+
+        processBackspace() {
+          if (!this.activeEnemy || this.activeEnemy.dead || this.activeEnemy.progress <= 0) return;
+          this.activeEnemy.progress -= 1;
+          this.activeBuffer = this.activeBuffer.slice(0, -1);
+          this.correctChars = Math.max(0, this.correctChars - 1);
+          this.audio.pulse({ frequency: 260, duration: 0.05, type: "triangle", volume: 0.015, slideTo: 180 });
+          if (!this.activeBuffer) this.activeEnemy = null;
+          this.syncActiveWord();
+        }
+
+        resolveTarget(prefix) {
+          if (this.activeEnemy && !this.activeEnemy.dead && this.activeEnemy.word.startsWith(prefix)) {
+            return this.activeEnemy;
+          }
+          return this.enemies
+            .filter((enemy) => !enemy.dead && enemy.word.startsWith(prefix))
+            .sort((a, b) => {
+              const prefixGap = a.wordChars.length - b.wordChars.length;
+              if (prefixGap !== 0) return prefixGap;
+              const dangerDiff = b.center().y - a.center().y;
+              if (Math.abs(dangerDiff) > 6) return dangerDiff;
+              if (a.type !== b.type) return a.type === "small" ? -1 : 1;
+              const shipX = this.getShipTarget().x;
+              return Math.abs((a.center().x - shipX)) - Math.abs((b.center().x - shipX));
+            })[0] || null;
+        }
+
+        registerWrong(target) {
+          this.wrongChars += 1;
+          this.combo = 1;
+          this.audio.error();
+          this.shake = Math.max(this.shake, 0.25);
+          if (target) target.registerWrong(performance.now() / 1000);
+          this.syncActiveWord();
+        }
+
+        syncActiveWord() {
+          for (const enemy of this.enemies) enemy.updateWordDisplay(this.activeEnemy === enemy, -1);
+        }
+
+        killEnemy(enemy) {
+          const now = performance.now() / 1000;
+          const center = enemy.center();
+          this.spawnLaser(center.x, center.y);
+          this.spawnExplosion(center.x, center.y, enemy.type);
+          this.audio.hit();
+          const nextCombo = now - this.lastKillAt < 2.3 ? this.combo + 1 : 1;
+          this.score += Math.round((enemy.type === "small" ? 140 : 320) * Math.max(1, nextCombo));
+          this.combo = nextCombo;
+          this.lastKillAt = now;
+          this.waveKills += 1;
+          this.removeEnemy(enemy);
+        }
+
+        spawnLaser(targetX, targetY) {
+          const ship = this.getShipTarget();
+          this.lasers.push(new Laser(this, ship.x, ship.y, targetX, targetY));
+        }
+
+        spawnExplosion(x, y, type) {
+          const colors = type === "small"
+            ? ["rgba(121, 242, 255, 0.95)", "rgba(145, 91, 255, 0.82)", "rgba(255,255,255,0.9)"]
+            : ["rgba(255, 211, 110, 0.95)", "rgba(255, 111, 145, 0.88)", "rgba(255,255,255,0.95)"];
+          const count = type === "small" ? 14 : 24;
+          for (let index = 0; index < count; index += 1) {
+            const angle = (Math.PI * 2 * index) / count + randomBetween(-0.3, 0.3);
+            const speed = randomBetween(type === "small" ? 60 : 85, type === "small" ? 150 : 220);
+            this.particles.push(new Particle(
+              this,
+              x,
+              y,
+              colors[index % colors.length],
+              randomBetween(4, type === "small" ? 7 : 10),
+              Math.cos(angle) * speed,
+              Math.sin(angle) * speed,
+              randomBetween(0.35, 0.72)
+            ));
+          }
+          const ring = document.createElement("div");
+          ring.className = "impact-ring";
+          ring.style.left = `${x}px`;
+          ring.style.top = `${y}px`;
+          ring.style.borderColor = type === "small" ? "rgba(121, 242, 255, 0.68)" : "rgba(255, 211, 110, 0.76)";
+          this.dom.fxLayer.appendChild(ring);
+          setTimeout(() => ring.remove(), 450);
+          this.shake = Math.max(this.shake, type === "small" ? 0.4 : 0.8);
+        }
+
+        removeEnemy(enemy) {
+          const index = this.enemies.indexOf(enemy);
+          if (index >= 0) this.enemies.splice(index, 1);
+          if (this.activeEnemy === enemy) {
+            this.activeEnemy = null;
+            this.activeBuffer = "";
+          }
+          enemy.destroy();
+          this.syncActiveWord();
+        }
+
+        enemyReachedBase(enemy) {
+          this.audio.loseLife();
+          this.spawnExplosion(enemy.center().x, this.getDangerLine(), enemy.type);
+          this.removeEnemy(enemy);
+          this.combo = 1;
+          this.gameOver();
+        }
+
+        refreshDanger() {
+          if (!this.enemies.length) return this.setDanger(0);
+          let nearest = Infinity;
+          for (const enemy of this.enemies) nearest = Math.min(nearest, this.getDangerLine() - enemy.center().y);
+          this.setDanger(clamp(1 - nearest / 260, 0, 1));
+        }
+
+        setDanger(amount) {
+          this.dom.dangerVignette.style.opacity = amount.toFixed(2);
+        }
+
+        updateHUD() {
+          const totalTyped = this.correctChars + this.wrongChars;
+          const accuracy = totalTyped ? Math.round((this.correctChars / totalTyped) * 100) : 100;
+          this.dom.scoreValue.textContent = this.score.toString();
+          this.dom.comboValue.textContent = `x${this.combo}`;
+          this.dom.accuracyValue.textContent = `${accuracy}%`;
+          this.dom.waveValue.textContent = `${this.wave} / ${MAX_WAVES}`;
+          this.dom.totalWavesValue.textContent = MAX_WAVES.toString();
+          this.dom.highScoreValue.textContent = this.highScore.toString();
+          this.dom.typedPreview.textContent = this.activeEnemy && !this.activeEnemy.dead
+            ? `${this.activeEnemy.wordChars.slice(0, this.activeEnemy.progress).join("")}_${this.activeEnemy.wordChars.slice(this.activeEnemy.progress).join("")}`
+            : "-";
+          if (this.state === "running") this.dom.modePill.textContent = `Onda ${this.wave}`;
+          else if (this.state === "victory") this.dom.modePill.textContent = "Vitória";
+          else if (this.state === "gameover") this.dom.modePill.textContent = "Fim";
+          else this.dom.modePill.textContent = "Menu";
+        }
+
+        gameOver() {
+          this.finishRun("gameover", {
+            eyebrow: "Impacto",
+            title: "Fim de Jogo",
+            copy: "Um choque encerra a missão. Respire e tente de novo."
+          });
+        }
+
+        win() {
+          this.finishRun("victory", {
+            eyebrow: "Rota limpa",
+            title: "Vitória Cósmica",
+            copy: "As 50 ondas caíram. Foco, ritmo e precisão até o fim."
+          });
+        }
+
+        finishRun(state, content) {
+          this.state = state;
+          const totalTyped = this.correctChars + this.wrongChars;
+          const accuracy = totalTyped ? Math.round((this.correctChars / totalTyped) * 100) : 100;
+          this.dom.endEyebrow.textContent = content.eyebrow;
+          this.dom.endTitle.textContent = content.title;
+          this.dom.endCopy.textContent = content.copy;
+          this.dom.finalScore.textContent = this.score.toString();
+          this.dom.finalWave.textContent = this.wave.toString();
+          this.dom.finalAccuracy.textContent = `${accuracy}%`;
+          this.dom.endOverlay.classList.remove("hidden");
+          if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem(STORAGE_KEYS.highScore, this.highScore.toString());
+          }
+          this.saveRanking({ name: this.difficulty === "hardcore" ? "Hardcore" : "Normal", score: this.score, wave: this.wave });
+          this.syncHighScore();
+          this.updateHUD();
+        }
+      }
+
+      loadWordLists().then(({ smallWords, largeWords }) => {
+        const game = new Game(new WordBank(smallWords, largeWords), new AudioManager());
+        window.cosmoescrita = game;
+      }).catch(() => {
+        elements.modePill.textContent = "erro";
+      });
+    })();
+  </script>
+</body>
+</html>
