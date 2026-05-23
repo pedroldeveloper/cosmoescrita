@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -1756,7 +1756,7 @@ personalização</script>
           const large = Math.min(5, Math.floor((wave - 1) / 10) + 1);
           const speedStep = Math.min(wave, 10);
           const baseIntensity = 0.82 + speedStep * 0.12;
-          const intensity = baseIntensity * (this.difficulty === "hardcore" ? 0.5 : 0.25);
+          const intensity = baseIntensity * (this.difficulty === "hardcore" ? 0.5 : 0.125);
           const spawnInterval = wave <= 10
             ? Math.max(0.34, 0.94 - wave * 0.045)
             : 0.5;
@@ -1947,48 +1947,65 @@ personalização</script>
           }
         }
 
+        hasLockedTarget() {
+          return Boolean(this.activeEnemy && !this.activeEnemy.dead);
+        }
+
+        getEnemyDistanceToShip(enemy) {
+          const ship = this.getShipTarget();
+          const center = enemy.center();
+          return Math.hypot(center.x - ship.x, center.y - ship.y);
+        }
+
         processCharacter(char) {
           if (!PT_LETTER_REGEX.test(char)) return;
-          const nextBuffer = this.activeBuffer + char;
-          let target = this.resolveTarget(nextBuffer);
-          if (!target) return this.registerWrong(null);
-          this.activeEnemy = target;
-          this.activeBuffer = nextBuffer;
-          if (char === target.nextExpectedChar()) {
-            target.progress += 1;
+          if (this.hasLockedTarget()) {
+            if (char !== this.activeEnemy.nextExpectedChar()) return this.registerWrong(this.activeEnemy);
+            this.activeBuffer += char;
+            this.activeEnemy.progress += 1;
             this.correctChars += 1;
             this.audio.shoot();
             this.syncActiveWord();
-            if (target.isCompleted()) this.killEnemy(target);
-          } else {
-            this.registerWrong(target);
+            if (this.activeEnemy.isCompleted()) this.killEnemy(this.activeEnemy);
+            return;
           }
+
+          const nextBuffer = this.activeBuffer + char;
+          const target = this.resolveTarget(nextBuffer);
+          if (!target) return this.registerWrong(null);
+          this.activeEnemy = target;
+          this.activeBuffer = nextBuffer;
+          target.progress += 1;
+          this.correctChars += 1;
+          this.audio.shoot();
+          this.syncActiveWord();
+          if (target.isCompleted()) this.killEnemy(target);
         }
 
         processBackspace() {
-          if (!this.activeEnemy || this.activeEnemy.dead || this.activeEnemy.progress <= 0) return;
+          if (!this.hasLockedTarget() || this.activeEnemy.progress <= 0) return;
           this.activeEnemy.progress -= 1;
           this.activeBuffer = this.activeBuffer.slice(0, -1);
           this.correctChars = Math.max(0, this.correctChars - 1);
           this.audio.pulse({ frequency: 260, duration: 0.05, type: "triangle", volume: 0.015, slideTo: 180 });
-          if (!this.activeBuffer) this.activeEnemy = null;
           this.syncActiveWord();
         }
 
         resolveTarget(prefix) {
-          if (this.activeEnemy && !this.activeEnemy.dead && this.activeEnemy.word.startsWith(prefix)) {
+          if (this.hasLockedTarget()) {
             return this.activeEnemy;
           }
           return this.enemies
             .filter((enemy) => !enemy.dead && enemy.word.startsWith(prefix))
             .sort((a, b) => {
+              const distanceDiff = this.getEnemyDistanceToShip(a) - this.getEnemyDistanceToShip(b);
+              if (Math.abs(distanceDiff) > 4) return distanceDiff;
+              const dangerDiff = b.center().y - a.center().y;
+              if (Math.abs(dangerDiff) > 4) return dangerDiff;
               const prefixGap = a.wordChars.length - b.wordChars.length;
               if (prefixGap !== 0) return prefixGap;
-              const dangerDiff = b.center().y - a.center().y;
-              if (Math.abs(dangerDiff) > 6) return dangerDiff;
               if (a.type !== b.type) return a.type === "small" ? -1 : 1;
-              const shipX = this.getShipTarget().x;
-              return Math.abs((a.center().x - shipX)) - Math.abs((b.center().x - shipX));
+              return a.id - b.id;
             })[0] || null;
         }
 
